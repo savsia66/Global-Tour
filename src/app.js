@@ -1,5 +1,10 @@
+const climateFilter = document.getElementById("climate-filter");
 const countriesGrid = document.getElementById("countries-grid");
 const searchInput = document.getElementById("search");
+const filterBtn = document.getElementById("filter-btn");
+const filterDropdown = document.getElementById("filter-dropdown");
+const regionFilter = document.getElementById("region-filter");
+const sortFilter = document.getElementById("sort-filter");
 const loadingIndicator = document.getElementById("loading");
 const modal = document.getElementById("country-modal");
 const closeModalBtn = document.getElementById("close-modal");
@@ -79,16 +84,13 @@ async function fetchCountries() {
     countriesGrid.innerHTML = "";
 
     const response = await fetch(
-      "https://restcountries.com/v3.1/all?fields=name,flags,population,region,capital,latlng",
+      "https://restcountries.com/v3.1/all?fields=name,flags,population,region,capital,latlng,area",
     );
 
     if (!response.ok) throw new Error("Failed to fetch API data");
 
-    const data = await response.json();
-    allCountries = data.sort((a, b) =>
-      a.name.common.localeCompare(b.name.common),
-    );
-    renderCountries(allCountries);
+    allCountries = await response.json();
+    applyFilters();
   } catch (error) {
     console.error(error);
     countriesGrid.innerHTML =
@@ -96,6 +98,50 @@ async function fetchCountries() {
   } finally {
     loadingIndicator.classList.add("hidden");
   }
+}
+
+function applyFilters() {
+  const searchTerm = searchInput.value.toLowerCase();
+  const selectedRegion = regionFilter.value;
+  const selectedClimate = climateFilter.value;
+  const selectedSort = sortFilter.value;
+
+  let filteredData = allCountries.filter((country) => {
+    const matchesSearch = country.name.common
+      .toLowerCase()
+      .includes(searchTerm);
+    const matchesRegion =
+      selectedRegion === "all" || country.region === selectedRegion;
+
+    let matchesClimate = true;
+    if (
+      selectedClimate !== "all" &&
+      country.latlng &&
+      country.latlng.length > 0
+    ) {
+      const lat = country.latlng[0];
+      if (selectedClimate === "tropical")
+        matchesClimate = lat > -23.5 && lat < 23.5;
+      else if (selectedClimate === "northern") matchesClimate = lat >= 23.5;
+      else if (selectedClimate === "southern") matchesClimate = lat <= -23.5;
+    }
+
+    return matchesSearch && matchesRegion && matchesClimate;
+  });
+
+  filteredData.sort((a, b) => {
+    if (selectedSort === "name-asc")
+      return a.name.common.localeCompare(b.name.common);
+    if (selectedSort === "name-desc")
+      return b.name.common.localeCompare(a.name.common);
+    if (selectedSort === "pop-desc") return b.population - a.population;
+    if (selectedSort === "pop-asc") return a.population - b.population;
+    if (selectedSort === "area-desc") return (b.area || 0) - (a.area || 0);
+    if (selectedSort === "area-asc") return (a.area || 0) - (b.area || 0);
+    return 0;
+  });
+
+  renderCountries(filteredData);
 }
 
 function renderCountries(countriesToRender) {
@@ -110,12 +156,14 @@ function renderCountries(countriesToRender) {
   countriesToRender.forEach((country) => {
     const name = country.name.common;
     const flagUrl = country.flags.svg || country.flags.png;
-    const population = country.population.toLocaleString("en-US");
-    const region = country.region;
     const capital =
       country.capital && country.capital.length > 0
         ? country.capital[0]
         : "N/A";
+    const population = country.population.toLocaleString("en-US");
+    const area = country.area
+      ? country.area.toLocaleString("en-US") + " km²"
+      : "N/A";
 
     const article = document.createElement("div");
     article.className =
@@ -126,9 +174,9 @@ function renderCountries(countriesToRender) {
       <div class="p-5 flex-1 flex flex-col">
         <h2 class="text-2xl font-bold text-slate-800 mb-4">${name}</h2>
         <div class="space-y-2 mt-auto text-sm text-slate-600">
-          <p><span class="font-semibold text-slate-800">Population:</span> ${population}</p>
-          <p><span class="font-semibold text-slate-800">Region:</span> ${region}</p>
           <p><span class="font-semibold text-slate-800">Capital:</span> ${capital}</p>
+          <p><span class="font-semibold text-slate-800">Population:</span> ${population}</p>
+          <p><span class="font-semibold text-slate-800">Area:</span> ${area}</p>
         </div>
       </div>
     `;
@@ -157,7 +205,7 @@ async function openModal(country) {
   weatherCard.className =
     "weather-card p-6 md:p-8 rounded-[23px] shadow-lg text-white bg-slate-300";
   weatherEffectLayer.className = "effect-layer rounded-[23px]";
-  modalWeatherIcon.textContent = "⏳";
+  modalWeatherIcon.innerHTML = "";
   modalWeatherDesc.textContent = "Fetching Atmosphere...";
 
   const fetchWiki = fetch(
@@ -204,15 +252,20 @@ async function openModal(country) {
   }
 }
 
-function applySearchFilter() {
-  const searchTerm = searchInput.value.toLowerCase();
-  const filteredData = allCountries.filter((country) =>
-    country.name.common.toLowerCase().includes(searchTerm),
-  );
-  renderCountries(filteredData);
-}
+searchInput.addEventListener("input", applyFilters);
+regionFilter.addEventListener("change", applyFilters);
+climateFilter.addEventListener("change", applyFilters);
+sortFilter.addEventListener("change", applyFilters);
 
-searchInput.addEventListener("input", applySearchFilter);
+filterBtn.addEventListener("click", () => {
+  filterDropdown.classList.toggle("hidden");
+});
+
+document.addEventListener("click", (e) => {
+  if (!filterBtn.contains(e.target) && !filterDropdown.contains(e.target)) {
+    filterDropdown.classList.add("hidden");
+  }
+});
 
 closeModalBtn.addEventListener("click", () => modal.classList.add("hidden"));
 modal.addEventListener("click", (e) => {
