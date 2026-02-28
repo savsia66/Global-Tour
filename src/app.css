@@ -4,6 +4,11 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.dark .glass {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 .modal-scroll::-webkit-scrollbar {
   width: 8px;
 }
@@ -16,6 +21,14 @@
 .modal-scroll::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 8px;
+}
+
+.dark .modal-scroll::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.dark .modal-scroll::-webkit-scrollbar-thumb {
+  background: #334155;
 }
 
 .weather-card {

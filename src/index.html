@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Digital Nomad Hub | Global Data</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -13,28 +18,46 @@
 </head>
 
 <body
-  class="bg-slate-50 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] min-h-screen p-4 md:p-8 font-['Inter']">
+  class="bg-slate-50 dark:bg-slate-900 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] min-h-screen p-4 md:p-8 font-['Inter'] transition-colors duration-300">
 
   <div class="max-w-5xl mx-auto">
     <header class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
       <div>
-        <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">
+        <h1 class="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight transition-colors">
           Nomad Hub <span class="text-blue-600">.</span>
         </h1>
-        <p class="text-slate-500 font-medium mt-3 ml-1">Live data for global explorers</p>
+        <p class="text-slate-500 dark:text-slate-400 font-medium mt-3 ml-1 transition-colors">Live data for global
+          explorers</p>
       </div>
 
-      <div
-        class="self-start sm:self-auto flex items-center gap-2 text-sm font-semibold text-slate-400 bg-white px-3 py-1 rounded-full border shadow-sm nowrap">
-        <span class="relative flex h-2 w-2">
-          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-          <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-        </span>
-        5 APIs Active
+      <div class="flex items-center gap-3 self-start sm:self-auto">
+        <div
+          class="flex items-center gap-2 text-sm font-semibold text-slate-400 dark:text-slate-300 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm nowrap transition-colors">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+          </span>
+          5 APIs Active
+        </div>
+
+        <button id="theme-toggle-btn"
+          class="p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-slate-400 dark:text-slate-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors shadow-sm">
+          <svg id="theme-icon-dark" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+          </svg>
+          <svg id="theme-icon-light" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd"
+              d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4.22 2.34a1 1 0 011.415 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zm-2.34 4.22a1 1 0 010 1.415l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 0zM10 18a1 1 0 01-1-1v-1a1 1 0 112 0v1a1 1 0 01-1 1zm-4.22-2.34a1 1 0 01-1.415 0l-.707-.707a1 1 0 011.414-1.414l.707.707a1 1 0 010 1.414zM2 10a1 1 0 011-1h1a1 1 0 110 2H3a1 1 0 01-1-1zm2.34-4.22a1 1 0 010-1.415l.707-.707a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414 0zM10 5a5 5 0 100 10 5 5 0 000-10z"
+              clip-rule="evenodd"></path>
+          </svg>
+        </button>
       </div>
     </header>
 
-    <div class="glass rounded-2xl shadow-xl shadow-slate-200/60 p-6 mb-8 relative z-30">
+    <div
+      class="glass rounded-2xl shadow-xl shadow-slate-200/60 dark:shadow-none p-6 mb-8 relative z-30 transition-colors">
       <div class="flex gap-4 items-center w-full md:w-3/4 lg:w-2/3 mx-auto">
         <div class="relative w-full">
           <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
@@ -45,11 +68,11 @@
             </svg>
           </span>
           <input type="text" id="search" placeholder="Search for a country..."
-            class="w-full border-slate-200 border rounded-xl pl-10 pr-4 py-3 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400" />
+            class="w-full bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl pl-10 pr-4 py-3 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 border" />
         </div>
 
         <button id="saved-toggle-btn"
-          class="bg-white border border-slate-200 text-slate-400 hover:bg-red-50 hover:border-red-200 hover:text-red-500 p-3 rounded-xl transition-all shadow-sm shrink-0"
+          class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:border-red-200 dark:hover:border-red-800 hover:text-red-500 dark:hover:text-red-400 p-3 rounded-xl transition-all shadow-sm shrink-0"
           title="Show Saved Countries">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -58,7 +81,7 @@
         </button>
 
         <button id="filter-btn"
-          class="bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 p-3 rounded-xl transition-all shadow-sm shrink-0">
+          class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 p-3 rounded-xl transition-all shadow-sm shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -67,12 +90,13 @@
       </div>
 
       <div id="filter-dropdown"
-        class="absolute top-full left-0 right-0 mt-4 mx-auto w-full max-w-4xl bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl p-6 z-40 hidden flex-col md:flex-row gap-6">
+        class="absolute top-full left-0 right-0 mt-4 mx-auto w-full max-w-4xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl p-6 z-40 hidden flex-col md:flex-row gap-6 transition-colors">
 
         <div class="flex-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Region</label>
+          <label
+            class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Region</label>
           <select id="region-filter"
-            class="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
             <option value="all">All Regions</option>
             <option value="Africa">Africa</option>
             <option value="Americas">Americas</option>
@@ -84,9 +108,11 @@
         </div>
 
         <div class="flex-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Climate Zone</label>
+          <label
+            class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Climate
+            Zone</label>
           <select id="climate-filter"
-            class="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
             <option value="all">Any Climate</option>
             <option value="tropical">🌴 Tropical (Near Equator)</option>
             <option value="northern">🌲 Northern Hemisphere</option>
@@ -95,9 +121,10 @@
         </div>
 
         <div class="flex-1">
-          <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Sort By</label>
+          <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Sort
+            By</label>
           <select id="sort-filter"
-            class="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+            class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
             <option value="name-asc">Alphabetical (A-Z)</option>
             <option value="name-desc">Alphabetical (Z-A)</option>
             <option value="pop-desc">Population (High to Low)</option>
@@ -113,7 +140,7 @@
     <div id="loading" class="hidden">
       <div class="flex items-center justify-center py-12">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span class="ml-3 text-slate-600 font-medium">Fetching global data...</span>
+        <span class="ml-3 text-slate-600 dark:text-slate-300 font-medium">Fetching global data...</span>
       </div>
     </div>
 
@@ -122,13 +149,13 @@
   </div>
 
   <div id="country-modal"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden p-4">
+    class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 dark:bg-slate-900/80 backdrop-blur-sm hidden p-4 transition-colors">
 
-    <div
-      class="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-scroll rounded-3xl shadow-2xl relative flex flex-col transform transition-all pt-12">
+    <div id="modal-content"
+      class="bg-white dark:bg-slate-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto modal-scroll rounded-3xl shadow-2xl relative flex flex-col transform transition-colors pt-12">
 
       <button id="close-modal"
-        class="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-full transition-colors z-50">
+        class="absolute top-4 right-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 p-2 rounded-full transition-colors z-50">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -138,19 +165,26 @@
 
         <div class="flex items-center gap-4 mb-6">
           <img id="modal-flag" src="" alt="Flag"
-            class="h-12 w-16 md:h-16 md:w-24 object-cover rounded shadow-sm border border-slate-100">
+            class="h-12 w-16 md:h-16 md:w-24 object-cover rounded shadow-sm border border-slate-100 dark:border-slate-700">
           <div>
-            <h2 id="modal-title" class="text-3xl md:text-4xl font-extrabold text-slate-900"></h2>
-            <p id="modal-capital" class="text-slate-500 font-medium flex items-center gap-1 mt-1"></p>
+            <h2 id="modal-title"
+              class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white transition-colors"></h2>
+            <p id="modal-capital"
+              class="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 mt-1 transition-colors"></p>
           </div>
         </div>
 
         <div class="mb-8">
-          <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Briefing</h3>
-          <p id="modal-summary" class="text-slate-700 leading-relaxed text-sm md:text-base"></p>
+          <h3
+            class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 transition-colors">
+            Briefing</h3>
+          <p id="modal-summary"
+            class="text-slate-700 dark:text-slate-300 leading-relaxed text-sm md:text-base transition-colors"></p>
         </div>
 
-        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Local Environment</h3>
+        <h3
+          class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 transition-colors">
+          Local Environment</h3>
 
         <div id="weather-card" class="weather-card p-6 md:p-8 rounded-[23px] shadow-lg text-white mb-8">
           <div id="weather-effect-layer" class="effect-layer rounded-[23px]"></div>
@@ -171,8 +205,18 @@
           </div>
         </div>
 
-        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Location</h3>
-        <div id="map" class="h-64 w-full rounded-[23px] shadow-inner border border-slate-200 relative z-0"></div>
+        <h3
+          class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 transition-colors">
+          Location</h3>
+        <div id="map"
+          class="h-64 w-full rounded-[23px] shadow-inner border border-slate-200 dark:border-slate-700 relative z-0 mb-8 transition-colors">
+        </div>
+
+        <h3
+          class="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 transition-colors">
+          Neighboring Countries</h3>
+        <div id="modal-neighbors" class="flex overflow-x-auto gap-4 pb-2 modal-scroll">
+        </div>
 
       </div>
     </div>

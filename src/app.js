@@ -1,3 +1,30 @@
+const themeToggleBtn = document.getElementById("theme-toggle-btn");
+const themeIconDark = document.getElementById("theme-icon-dark");
+const themeIconLight = document.getElementById("theme-icon-light");
+
+if (
+  localStorage.getItem("theme") === "dark" ||
+  (!("theme" in localStorage) &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches)
+) {
+  document.documentElement.classList.add("dark");
+  themeIconLight.classList.remove("hidden");
+} else {
+  document.documentElement.classList.remove("dark");
+  themeIconDark.classList.remove("hidden");
+}
+
+themeToggleBtn.addEventListener("click", () => {
+  document.documentElement.classList.toggle("dark");
+  themeIconDark.classList.toggle("hidden");
+  themeIconLight.classList.toggle("hidden");
+  if (document.documentElement.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
+});
+
 const climateFilter = document.getElementById("climate-filter");
 const countriesGrid = document.getElementById("countries-grid");
 const searchInput = document.getElementById("search");
@@ -8,12 +35,14 @@ const regionFilter = document.getElementById("region-filter");
 const sortFilter = document.getElementById("sort-filter");
 const loadingIndicator = document.getElementById("loading");
 const modal = document.getElementById("country-modal");
+const modalContent = document.getElementById("modal-content");
 const closeModalBtn = document.getElementById("close-modal");
 
 const modalFlag = document.getElementById("modal-flag");
 const modalTitle = document.getElementById("modal-title");
 const modalCapital = document.getElementById("modal-capital");
 const modalSummary = document.getElementById("modal-summary");
+const modalNeighbors = document.getElementById("modal-neighbors");
 
 const weatherCard = document.getElementById("weather-card");
 const weatherEffectLayer = document.getElementById("weather-effect-layer");
@@ -89,7 +118,7 @@ async function fetchCountries() {
     countriesGrid.innerHTML = "";
 
     const response = await fetch(
-      "https://restcountries.com/v3.1/all?fields=name,flags,population,region,capital,latlng,area,cca3",
+      "https://restcountries.com/v3.1/all?fields=name,flags,population,region,capital,latlng,area,cca3,borders",
     );
 
     if (!response.ok) throw new Error("Failed to fetch API data");
@@ -167,7 +196,7 @@ function renderCountries(countriesToRender) {
 
   if (countriesToRender.length === 0) {
     countriesGrid.innerHTML =
-      '<p class="text-slate-500 col-span-full text-center py-4">No countries found.</p>';
+      '<p class="text-slate-500 dark:text-slate-400 col-span-full text-center py-4">No countries found.</p>';
     return;
   }
 
@@ -187,26 +216,26 @@ function renderCountries(countriesToRender) {
     const isSaved = savedCountries.includes(code);
     const heartFill = isSaved ? "currentColor" : "none";
     const heartColor = isSaved
-      ? "text-red-500"
-      : "text-white drop-shadow-md hover:text-red-400";
+      ? "text-red-500 border-transparent"
+      : "text-white dark:text-slate-300 drop-shadow-md hover:text-red-400 dark:hover:text-red-400 border-white dark:border-slate-500";
 
     const article = document.createElement("div");
     article.className =
-      "glass rounded-2xl shadow-sm hover:-translate-y-1 transition-transform duration-200 overflow-hidden flex flex-col cursor-pointer relative";
+      "glass dark:shadow-none rounded-2xl shadow-sm hover:-translate-y-1 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer relative";
 
     article.innerHTML = `
-      <button class="save-btn absolute top-3 right-3 p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-all z-10 ${heartColor}">
+      <button class="save-btn absolute top-3 right-3 p-2 bg-white/40 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full transition-all z-10 ${heartColor} shadow-sm border">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="${heartFill}" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       </button>
-      <img src="${flagUrl}" alt="Flag of ${name}" class="h-40 w-full object-cover border-b border-slate-100">
+      <img src="${flagUrl}" alt="Flag of ${name}" class="h-40 w-full object-cover border-b border-slate-100 dark:border-slate-700">
       <div class="p-5 flex-1 flex flex-col">
-        <h2 class="text-2xl font-bold text-slate-800 mb-4">${name}</h2>
-        <div class="space-y-2 mt-auto text-sm text-slate-600">
-          <p><span class="font-semibold text-slate-800">Capital:</span> ${capital}</p>
-          <p><span class="font-semibold text-slate-800">Population:</span> ${population}</p>
-          <p><span class="font-semibold text-slate-800">Area:</span> ${area}</p>
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-4 transition-colors">${name}</h2>
+        <div class="space-y-2 mt-auto text-sm text-slate-600 dark:text-slate-300 transition-colors">
+          <p><span class="font-semibold text-slate-800 dark:text-slate-200">Capital:</span> ${capital}</p>
+          <p><span class="font-semibold text-slate-800 dark:text-slate-200">Population:</span> ${population}</p>
+          <p><span class="font-semibold text-slate-800 dark:text-slate-200">Area:</span> ${area}</p>
         </div>
       </div>
     `;
@@ -224,6 +253,7 @@ function renderCountries(countriesToRender) {
 
 async function openModal(country) {
   modal.classList.remove("hidden");
+  modalContent.scrollTop = 0;
 
   const name = country.name.common;
   const capital =
@@ -241,7 +271,7 @@ async function openModal(country) {
   modalWeatherTemp.textContent = "--°C";
   modalTime.textContent = "--:--";
   weatherCard.className =
-    "weather-card p-6 md:p-8 rounded-[23px] shadow-lg text-white bg-slate-300 mb-8";
+    "weather-card p-6 md:p-8 rounded-[23px] shadow-lg text-white mb-8";
   weatherEffectLayer.className = "effect-layer rounded-[23px]";
   modalWeatherIcon.innerHTML = "";
   modalWeatherDesc.textContent = "Fetching Atmosphere...";
@@ -263,6 +293,29 @@ async function openModal(country) {
   setTimeout(() => {
     map.invalidateSize();
   }, 100);
+
+  modalNeighbors.innerHTML = "";
+  if (country.borders && country.borders.length > 0) {
+    country.borders.forEach((borderCode) => {
+      const neighbor = allCountries.find((c) => c.cca3 === borderCode);
+      if (neighbor) {
+        const nName = neighbor.name.common;
+        const nFlag = neighbor.flags.svg || neighbor.flags.png;
+        const neighborDiv = document.createElement("div");
+        neighborDiv.className =
+          "shrink-0 w-24 flex flex-col items-center cursor-pointer group";
+        neighborDiv.innerHTML = `
+          <img src="${nFlag}" alt="${nName}" class="h-16 w-24 object-cover rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 group-hover:border-blue-400 dark:group-hover:border-blue-500 group-hover:shadow-md transition-all mb-2">
+          <span class="text-xs text-center font-semibold text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">${nName}</span>
+        `;
+        neighborDiv.addEventListener("click", () => openModal(neighbor));
+        modalNeighbors.appendChild(neighborDiv);
+      }
+    });
+  } else {
+    modalNeighbors.innerHTML =
+      '<p class="text-sm text-slate-400 dark:text-slate-500 italic">No land borders (Island nation).</p>';
+  }
 
   const fetchWiki = fetch(
     `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`,
@@ -320,15 +373,25 @@ filterBtn.addEventListener("click", () => {
 savedToggleBtn.addEventListener("click", () => {
   showSavedOnly = !showSavedOnly;
   if (showSavedOnly) {
-    savedToggleBtn.classList.remove("text-slate-400");
-    savedToggleBtn.classList.add("text-red-500", "bg-red-50", "border-red-200");
+    savedToggleBtn.classList.remove("text-slate-400", "dark:text-slate-500");
+    savedToggleBtn.classList.add(
+      "text-red-500",
+      "bg-red-50",
+      "border-red-200",
+      "dark:bg-red-900/30",
+      "dark:border-red-800",
+      "dark:text-red-400",
+    );
     savedToggleBtn.querySelector("svg").setAttribute("fill", "currentColor");
   } else {
-    savedToggleBtn.classList.add("text-slate-400");
+    savedToggleBtn.classList.add("text-slate-400", "dark:text-slate-500");
     savedToggleBtn.classList.remove(
       "text-red-500",
       "bg-red-50",
       "border-red-200",
+      "dark:bg-red-900/30",
+      "dark:border-red-800",
+      "dark:text-red-400",
     );
     savedToggleBtn.querySelector("svg").setAttribute("fill", "none");
   }
