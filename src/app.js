@@ -1,6 +1,4 @@
 const themeToggleBtn = document.getElementById("theme-toggle-btn");
-const themeIconDark = document.getElementById("theme-icon-dark");
-const themeIconLight = document.getElementById("theme-icon-light");
 
 if (
   localStorage.getItem("theme") === "dark" ||
@@ -8,16 +6,12 @@ if (
     window.matchMedia("(prefers-color-scheme: dark)").matches)
 ) {
   document.documentElement.classList.add("dark");
-  themeIconLight.classList.remove("hidden");
 } else {
   document.documentElement.classList.remove("dark");
-  themeIconDark.classList.remove("hidden");
 }
 
 themeToggleBtn.addEventListener("click", () => {
   document.documentElement.classList.toggle("dark");
-  themeIconDark.classList.toggle("hidden");
-  themeIconLight.classList.toggle("hidden");
   if (document.documentElement.classList.contains("dark")) {
     localStorage.setItem("theme", "dark");
   } else {
@@ -25,14 +19,13 @@ themeToggleBtn.addEventListener("click", () => {
   }
 });
 
-const climateFilter = document.getElementById("climate-filter");
 const countriesGrid = document.getElementById("countries-grid");
 const searchInput = document.getElementById("search");
+const searchWrapper = document.getElementById("search-wrapper");
 const filterBtn = document.getElementById("filter-btn");
 const savedToggleBtn = document.getElementById("saved-toggle-btn");
+const savedIcon = document.getElementById("saved-icon");
 const filterDropdown = document.getElementById("filter-dropdown");
-const regionFilter = document.getElementById("region-filter");
-const sortFilter = document.getElementById("sort-filter");
 const loadingIndicator = document.getElementById("loading");
 const modal = document.getElementById("country-modal");
 const modalContent = document.getElementById("modal-content");
@@ -56,6 +49,36 @@ let savedCountries = JSON.parse(localStorage.getItem("savedCountries")) || [];
 let showSavedOnly = false;
 let map = null;
 let mapMarker = null;
+
+let selectedRegion = "all";
+let selectedClimate = "all";
+let selectedSort = "name-asc";
+
+const customOptions = document.querySelectorAll(".custom-option");
+customOptions.forEach((option) => {
+  option.addEventListener("click", (e) => {
+    const filterType = e.target.getAttribute("data-filter");
+    const value = e.target.getAttribute("data-value");
+    const text = e.target.innerText;
+
+    if (filterType === "region") {
+      selectedRegion = value;
+      document.getElementById("region-display").innerText = text;
+    } else if (filterType === "climate") {
+      selectedClimate = value;
+      document.getElementById("climate-display").innerText = text;
+    } else if (filterType === "sort") {
+      selectedSort = value;
+      document.getElementById("sort-display").innerText = text;
+    }
+    applyFilters();
+    const parentUl = e.target.closest("ul");
+    parentUl.style.display = "none";
+    setTimeout(() => {
+      parentUl.style.display = "";
+    }, 150);
+  });
+});
 
 function applyWeatherEffects(weatherCode, windSpeed) {
   weatherCard.className =
@@ -146,9 +169,6 @@ function toggleSaveCountry(code) {
 
 function applyFilters() {
   const searchTerm = searchInput.value.toLowerCase();
-  const selectedRegion = regionFilter.value;
-  const selectedClimate = climateFilter.value;
-  const selectedSort = sortFilter.value;
 
   let filteredData = allCountries.filter((country) => {
     const matchesSearch = country.name.common
@@ -221,10 +241,10 @@ function renderCountries(countriesToRender) {
 
     const article = document.createElement("div");
     article.className =
-      "glass dark:shadow-none rounded-2xl shadow-sm hover:-translate-y-1 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer relative";
+      "glass dark:shadow-none rounded-2xl shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col cursor-pointer relative";
 
     article.innerHTML = `
-      <button class="save-btn absolute top-3 right-3 p-2 bg-white/40 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full transition-all z-10 ${heartColor} shadow-sm border">
+      <button class="save-btn absolute top-3 right-3 p-2 bg-white/40 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full transition-colors z-10 ${heartColor} shadow-sm border">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="${heartFill}" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
@@ -243,7 +263,13 @@ function renderCountries(countriesToRender) {
     const saveBtn = article.querySelector(".save-btn");
     saveBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      toggleSaveCountry(code);
+      const svgIcon = saveBtn.querySelector("svg");
+
+      svgIcon.classList.add("heart-pop");
+
+      setTimeout(() => {
+        toggleSaveCountry(code);
+      }, 350);
     });
 
     article.addEventListener("click", () => openModal(country));
@@ -362,15 +388,25 @@ async function openModal(country) {
 }
 
 searchInput.addEventListener("input", applyFilters);
-regionFilter.addEventListener("change", applyFilters);
-climateFilter.addEventListener("change", applyFilters);
-sortFilter.addEventListener("change", applyFilters);
 
 filterBtn.addEventListener("click", () => {
   filterDropdown.classList.toggle("hidden");
+  if (filterDropdown.classList.contains("hidden")) {
+    searchWrapper.classList.remove("rounded-b-none", "!border-b-transparent");
+  } else {
+    searchWrapper.classList.add("rounded-b-none", "!border-b-transparent");
+  }
 });
 
 savedToggleBtn.addEventListener("click", () => {
+  // 1. Play the animation
+  savedIcon.classList.add("heart-pop");
+
+  // 2. Clean it up after 400ms so it is ready to play again
+  setTimeout(() => {
+    savedIcon.classList.remove("heart-pop");
+  }, 400);
+
   showSavedOnly = !showSavedOnly;
   if (showSavedOnly) {
     savedToggleBtn.classList.remove("text-slate-400", "dark:text-slate-500");
@@ -382,7 +418,7 @@ savedToggleBtn.addEventListener("click", () => {
       "dark:border-red-800",
       "dark:text-red-400",
     );
-    savedToggleBtn.querySelector("svg").setAttribute("fill", "currentColor");
+    savedIcon.setAttribute("fill", "currentColor");
   } else {
     savedToggleBtn.classList.add("text-slate-400", "dark:text-slate-500");
     savedToggleBtn.classList.remove(
@@ -393,7 +429,7 @@ savedToggleBtn.addEventListener("click", () => {
       "dark:border-red-800",
       "dark:text-red-400",
     );
-    savedToggleBtn.querySelector("svg").setAttribute("fill", "none");
+    savedIcon.setAttribute("fill", "none");
   }
   applyFilters();
 });
@@ -401,6 +437,7 @@ savedToggleBtn.addEventListener("click", () => {
 document.addEventListener("click", (e) => {
   if (!filterBtn.contains(e.target) && !filterDropdown.contains(e.target)) {
     filterDropdown.classList.add("hidden");
+    searchWrapper.classList.remove("rounded-b-none", "!border-b-transparent");
   }
 });
 
@@ -408,5 +445,18 @@ closeModalBtn.addEventListener("click", () => modal.classList.add("hidden"));
 modal.addEventListener("click", (e) => {
   if (e.target === modal) modal.classList.add("hidden");
 });
+const clearFiltersBtn = document.getElementById("clear-filters-btn");
 
+clearFiltersBtn.addEventListener("click", () => {
+  selectedRegion = "all";
+  selectedClimate = "all";
+  selectedSort = "name-asc";
+  searchInput.value = "";
+
+  document.getElementById("region-display").innerText = "All Regions";
+  document.getElementById("climate-display").innerText = "Any Climate";
+  document.getElementById("sort-display").innerText = "Alphabetical (A-Z)";
+
+  applyFilters();
+});
 fetchCountries();

@@ -118,6 +118,22 @@
   }
 }
 
+@keyframes heartPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.6);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.heart-pop {
+  animation: heartPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
 .icon-sunny {
   width: 100%;
   height: 100%;
@@ -410,4 +426,31 @@
   animation:
     fadeIn 0.75s ease-out 0.2s infinite reverse,
     scaleUp 0.75s ease-out 0.2s infinite;
+}
+@keyframes blobShape {
+  0%,
+  100% {
+    border-radius: 42% 58% 70% 30% / 45% 45% 55% 55%;
+  }
+  33% {
+    border-radius: 70% 30% 46% 54% / 30% 29% 71% 70%;
+  }
+  66% {
+    border-radius: 100% 60% 60% 100% / 100% 100% 60% 60%;
+  }
+}
+
+@keyframes blobSpin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.theme-ripple {
+  animation:
+    blobShape 3s linear infinite,
+    blobSpin 4s linear infinite;
 }
