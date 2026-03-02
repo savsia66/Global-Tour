@@ -80,33 +80,69 @@ customOptions.forEach((option) => {
   });
 });
 
-function applyWeatherEffects(weatherCode, windSpeed) {
+function applyWeatherEffects(weatherCode, windSpeed, isDay) {
   weatherCard.className =
     "weather-card p-6 md:p-8 rounded-[23px] shadow-lg text-white mb-8";
 
-  const animSunny = '<div class="icon-sunny"></div>';
-  const animPartlyCloudy =
-    '<div class="icon-partly-cloudy"><div class="pc-sun"></div><div class="pc-cloud cloud-shape"></div></div>';
-  const animCloudy = '<div class="icon-cloudy cloud-shape"></div>';
+  const sunRaysHTML = `
+    <div class="sun-core"></div>
+    <div class="rays-container">
+      ${Array.from({ length: 8 }, (_, i) => `<div class="ray" style="--i:${i + 1}"></div>`).join("")}
+    </div>
+  `;
+
+  const simpleSunHTML = `<div class="sun-core-simple"></div>`;
+
+  const bigMoonHTML = `
+    <div style="position: absolute; height: 44%; width: 44%; top: 28%; left: 28%; border-radius: 50%; box-shadow: inset -12px -4px 0 0 #e2e8f0; filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); z-index: 2;"></div>
+  `;
+
+  const smallMoonHTML = `
+    <div style="position: absolute; height: 50%; width: 50%; top: 15%; left: 15%; border-radius: 50%; box-shadow: inset -8px -3px 0 0 #e2e8f0; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); z-index: 1;"></div>
+  `;
+
+  const animSunny = isDay
+    ? `<div class="icon-sunny">${sunRaysHTML}</div>`
+    : `<div style="width: 100%; height: 100%; position: relative;">${bigMoonHTML}</div>`;
+
+  const animPartlyCloudy = `
+    <div class="icon-partly-cloudy">
+      <div class="pc-sun">${isDay ? simpleSunHTML : smallMoonHTML}</div>
+      <div class="pc-cloud cloud-shape"></div>
+    </div>`;
+
+  const animCloudy = `
+    <div class="icon-cloudy-container">
+      <div class="icon-cloudy cloud-shape"></div>
+    </div>`;
   const animRainy =
     '<div class="icon-rainy"><div class="rain-cloud cloud-shape"></div><div class="rain-drops"></div></div>';
-  const animSnowy =
-    '<div class="icon-rainy"><div class="snow-cloud cloud-shape"></div><div class="snow-drops"></div></div>';
+  const animSnowy = `
+    <div class="icon-snowy" style="position: relative; height: 100%; width: 100%;">
+      <div class="snow-cloud cloud-shape" style="z-index: 2; position: relative;"></div>
+      <div class="snow-drops" style="z-index: 1; position: absolute; inset: 0;">
+        <div class="snow-particle p1"></div>
+        <div class="snow-particle p2"></div>
+        <div class="snow-particle p3"></div>
+      </div>
+    </div>`;
   const animThundery =
     '<div class="icon-thundery"><div class="thunder-cloud cloud-shape"></div><div class="thunder-drops"></div></div>';
 
   let isWindy = windSpeed > 20;
 
   if (weatherCode === 0) {
-    weatherCard.classList.add("weather-sunny");
+    weatherCard.classList.add(isDay ? "weather-sunny" : "weather-rainy");
     modalWeatherIcon.innerHTML = animSunny;
-    modalWeatherDesc.textContent = "Clear & Sunny";
+    modalWeatherDesc.textContent = isDay ? "Clear & Sunny" : "Clear Night";
   } else if (weatherCode > 0 && weatherCode < 3) {
-    weatherCard.classList.add("weather-cloudy");
+    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
     modalWeatherIcon.innerHTML = animPartlyCloudy;
-    modalWeatherDesc.textContent = "Partly Cloudy";
+    modalWeatherDesc.textContent = isDay
+      ? "Partly Cloudy"
+      : "Partly Cloudy Night";
   } else if (weatherCode === 3) {
-    weatherCard.classList.add("weather-cloudy");
+    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
     modalWeatherIcon.innerHTML = animCloudy;
     modalWeatherDesc.textContent = "Overcast";
   } else if (
@@ -125,7 +161,7 @@ function applyWeatherEffects(weatherCode, windSpeed) {
     modalWeatherIcon.innerHTML = animThundery;
     modalWeatherDesc.textContent = "Thunderstorm";
   } else {
-    weatherCard.classList.add("weather-cloudy");
+    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
     modalWeatherIcon.innerHTML = animCloudy;
     modalWeatherDesc.textContent = "Unknown";
   }
@@ -164,7 +200,10 @@ function toggleSaveCountry(code) {
     savedCountries.push(code);
   }
   localStorage.setItem("savedCountries", JSON.stringify(savedCountries));
-  applyFilters();
+
+  if (showSavedOnly) {
+    applyFilters();
+  }
 }
 
 function applyFilters() {
@@ -241,16 +280,22 @@ function renderCountries(countriesToRender) {
 
     const article = document.createElement("div");
     article.className =
-      "glass dark:shadow-none rounded-2xl shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col cursor-pointer relative";
+      "card-border-anim card-3d-wobble glass dark:shadow-none rounded-2xl shadow-sm hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-cyan-500/20 transition-shadow duration-300 flex flex-col cursor-pointer relative border border-transparent";
 
     article.innerHTML = `
-      <button class="save-btn absolute top-3 right-3 p-2 bg-white/40 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full transition-colors z-10 ${heartColor} shadow-sm border">
+      <div class="card-border-wrapper rounded-2xl"></div>
+
+      <button class="save-btn absolute top-3 right-3 p-2 bg-white/40 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full transition-colors z-40 ${heartColor} shadow-sm border">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="${heartFill}" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       </button>
-      <img src="${flagUrl}" alt="Flag of ${name}" class="h-40 w-full object-cover border-b border-slate-100 dark:border-slate-700">
-      <div class="p-5 flex-1 flex flex-col">
+      
+      <div class="overflow-hidden rounded-t-2xl relative z-10">
+        <img src="${flagUrl}" alt="Flag of ${name}" class="h-40 w-full object-cover border-b border-slate-100 dark:border-slate-700 transition-transform duration-700 hover:scale-110">
+      </div>
+      
+      <div class="p-5 flex-1 flex flex-col relative z-10 bg-white/50 dark:bg-transparent rounded-b-2xl transition-colors">
         <h2 class="text-2xl font-bold text-slate-800 dark:text-white mb-4 transition-colors">${name}</h2>
         <div class="space-y-2 mt-auto text-sm text-slate-600 dark:text-slate-300 transition-colors">
           <p><span class="font-semibold text-slate-800 dark:text-slate-200">Capital:</span> ${capital}</p>
@@ -268,8 +313,20 @@ function renderCountries(countriesToRender) {
       svgIcon.classList.add("heart-pop");
 
       setTimeout(() => {
-        toggleSaveCountry(code);
-      }, 350);
+        svgIcon.classList.remove("heart-pop");
+      }, 400);
+
+      const isNowSaved = !savedCountries.includes(code);
+      const newHeartFill = isNowSaved ? "currentColor" : "none";
+      const newHeartColor = isNowSaved
+        ? "text-red-500 border-transparent"
+        : "text-white dark:text-slate-300 drop-shadow-md hover:text-red-400 dark:hover:text-red-400 border-white dark:border-slate-500";
+
+      svgIcon.setAttribute("fill", newHeartFill);
+
+      saveBtn.className = `save-btn absolute top-3 right-3 p-2 bg-white/40 dark:bg-slate-800/60 hover:bg-white/80 dark:hover:bg-slate-800 backdrop-blur-md rounded-full transition-colors z-40 shadow-sm border ${newHeartColor}`;
+
+      toggleSaveCountry(code);
     });
 
     article.addEventListener("click", () => openModal(country));
@@ -331,8 +388,10 @@ async function openModal(country) {
         neighborDiv.className =
           "shrink-0 w-24 flex flex-col items-center cursor-pointer group";
         neighborDiv.innerHTML = `
-          <img src="${nFlag}" alt="${nName}" class="h-16 w-24 object-cover rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 group-hover:border-blue-400 dark:group-hover:border-blue-500 group-hover:shadow-md transition-all mb-2">
-          <span class="text-xs text-center font-semibold text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">${nName}</span>
+          <div class="relative overflow-hidden rounded-lg mb-2 border border-slate-200 dark:border-slate-700 transition-all duration-300 group-hover:shadow-md group-hover:shadow-blue-500/20 dark:group-hover:shadow-cyan-500/20 group-hover:border-blue-400 dark:group-hover:border-cyan-400 w-24 h-16">
+            <img src="${nFlag}" alt="${nName}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110">
+          </div>
+          <span class="text-xs text-center font-semibold text-slate-600 dark:text-slate-400 group-hover:text-blue-500 dark:group-hover:text-cyan-400 transition-colors duration-300 line-clamp-2">${nName}</span>
         `;
         neighborDiv.addEventListener("click", () => openModal(neighbor));
         modalNeighbors.appendChild(neighborDiv);
@@ -366,10 +425,16 @@ async function openModal(country) {
   if (weather && weather.current_weather) {
     modalWeatherTemp.textContent = `${weather.current_weather.temperature}°C`;
 
-    applyWeatherEffects(
-      weather.current_weather.weathercode,
-      weather.current_weather.windspeed,
-    );
+    let isDay = true;
+    if (weather.current_weather.is_day !== undefined) {
+      isDay = weather.current_weather.is_day === 1;
+    } else if (weather.timezone) {
+      const localTime = new Date(
+        new Date().toLocaleString("en-US", { timeZone: weather.timezone }),
+      );
+      const hour = localTime.getHours();
+      isDay = hour >= 6 && hour < 19;
+    }
 
     if (weather.timezone) {
       const timeString = new Date().toLocaleTimeString("en-US", {
@@ -380,6 +445,12 @@ async function openModal(country) {
       });
       modalTime.textContent = timeString;
     }
+
+    applyWeatherEffects(
+      weather.current_weather.weathercode,
+      weather.current_weather.windspeed,
+      isDay,
+    );
   } else {
     modalWeatherTemp.textContent = "N/A";
     modalTime.textContent = "Time unavailable";
@@ -389,20 +460,27 @@ async function openModal(country) {
 
 searchInput.addEventListener("input", applyFilters);
 
-filterBtn.addEventListener("click", () => {
-  filterDropdown.classList.toggle("hidden");
-  if (filterDropdown.classList.contains("hidden")) {
+let filterHoverTimeout;
+
+const showFilterDropdown = () => {
+  clearTimeout(filterHoverTimeout);
+  filterDropdown.classList.remove("hidden");
+  searchWrapper.classList.add("rounded-b-none", "!border-b-transparent");
+};
+
+const hideFilterDropdown = () => {
+  filterHoverTimeout = setTimeout(() => {
+    filterDropdown.classList.add("hidden");
     searchWrapper.classList.remove("rounded-b-none", "!border-b-transparent");
-  } else {
-    searchWrapper.classList.add("rounded-b-none", "!border-b-transparent");
-  }
-});
+  }, 150);
+};
+
+filterBtn.addEventListener("mouseenter", showFilterDropdown);
+filterDropdown.addEventListener("mouseenter", showFilterDropdown);
 
 savedToggleBtn.addEventListener("click", () => {
-  // 1. Play the animation
   savedIcon.classList.add("heart-pop");
 
-  // 2. Clean it up after 400ms so it is ready to play again
   setTimeout(() => {
     savedIcon.classList.remove("heart-pop");
   }, 400);
