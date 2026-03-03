@@ -1,24 +1,4 @@
 const themeToggleBtn = document.getElementById("theme-toggle-btn");
-
-if (
-  localStorage.getItem("theme") === "dark" ||
-  (!("theme" in localStorage) &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches)
-) {
-  document.documentElement.classList.add("dark");
-} else {
-  document.documentElement.classList.remove("dark");
-}
-
-themeToggleBtn.addEventListener("click", () => {
-  document.documentElement.classList.toggle("dark");
-  if (document.documentElement.classList.contains("dark")) {
-    localStorage.setItem("theme", "dark");
-  } else {
-    localStorage.setItem("theme", "light");
-  }
-});
-
 const countriesGrid = document.getElementById("countries-grid");
 const searchInput = document.getElementById("search");
 const searchWrapper = document.getElementById("search-wrapper");
@@ -30,146 +10,29 @@ const loadingIndicator = document.getElementById("loading");
 const modal = document.getElementById("country-modal");
 const modalContent = document.getElementById("modal-content");
 const closeModalBtn = document.getElementById("close-modal");
-
 const modalFlag = document.getElementById("modal-flag");
 const modalTitle = document.getElementById("modal-title");
 const modalCapital = document.getElementById("modal-capital");
 const modalSummary = document.getElementById("modal-summary");
 const modalNeighbors = document.getElementById("modal-neighbors");
-
 const weatherCard = document.getElementById("weather-card");
 const weatherEffectLayer = document.getElementById("weather-effect-layer");
 const modalWeatherTemp = document.getElementById("modal-weather-temp");
 const modalTime = document.getElementById("modal-time");
 const modalWeatherIcon = document.getElementById("modal-weather-icon");
 const modalWeatherDesc = document.getElementById("modal-weather-desc");
+const customOptions = document.querySelectorAll(".custom-option");
+const clearFiltersBtn = document.getElementById("clear-filters-btn");
 
 let allCountries = [];
 let savedCountries = JSON.parse(localStorage.getItem("savedCountries")) || [];
 let showSavedOnly = false;
 let map = null;
 let mapMarker = null;
-
 let selectedRegion = "all";
 let selectedClimate = "all";
 let selectedSort = "name-asc";
-
-const customOptions = document.querySelectorAll(".custom-option");
-customOptions.forEach((option) => {
-  option.addEventListener("click", (e) => {
-    const filterType = e.target.getAttribute("data-filter");
-    const value = e.target.getAttribute("data-value");
-    const text = e.target.innerText;
-
-    if (filterType === "region") {
-      selectedRegion = value;
-      document.getElementById("region-display").innerText = text;
-    } else if (filterType === "climate") {
-      selectedClimate = value;
-      document.getElementById("climate-display").innerText = text;
-    } else if (filterType === "sort") {
-      selectedSort = value;
-      document.getElementById("sort-display").innerText = text;
-    }
-    applyFilters();
-    const parentUl = e.target.closest("ul");
-    parentUl.style.display = "none";
-    setTimeout(() => {
-      parentUl.style.display = "";
-    }, 150);
-  });
-});
-
-function applyWeatherEffects(weatherCode, windSpeed, isDay) {
-  weatherCard.className =
-    "weather-card p-6 md:p-8 rounded-[23px] shadow-lg text-white mb-8";
-
-  const sunRaysHTML = `
-    <div class="sun-core"></div>
-    <div class="rays-container">
-      ${Array.from({ length: 8 }, (_, i) => `<div class="ray" style="--i:${i + 1}"></div>`).join("")}
-    </div>
-  `;
-
-  const simpleSunHTML = `<div class="sun-core-simple"></div>`;
-
-  const bigMoonHTML = `
-    <div style="position: absolute; height: 44%; width: 44%; top: 28%; left: 28%; border-radius: 50%; box-shadow: inset -12px -4px 0 0 #e2e8f0; filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); z-index: 2;"></div>
-  `;
-
-  const smallMoonHTML = `
-    <div style="position: absolute; height: 50%; width: 50%; top: 15%; left: 15%; border-radius: 50%; box-shadow: inset -8px -3px 0 0 #e2e8f0; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); z-index: 1;"></div>
-  `;
-
-  const animSunny = isDay
-    ? `<div class="icon-sunny">${sunRaysHTML}</div>`
-    : `<div style="width: 100%; height: 100%; position: relative;">${bigMoonHTML}</div>`;
-
-  const animPartlyCloudy = `
-    <div class="icon-partly-cloudy">
-      <div class="pc-sun">${isDay ? simpleSunHTML : smallMoonHTML}</div>
-      <div class="pc-cloud cloud-shape"></div>
-    </div>`;
-
-  const animCloudy = `
-    <div class="icon-cloudy-container">
-      <div class="icon-cloudy cloud-shape"></div>
-    </div>`;
-  const animRainy =
-    '<div class="icon-rainy"><div class="rain-cloud cloud-shape"></div><div class="rain-drops"></div></div>';
-  const animSnowy = `
-    <div class="icon-snowy" style="position: relative; height: 100%; width: 100%;">
-      <div class="snow-cloud cloud-shape" style="z-index: 2; position: relative;"></div>
-      <div class="snow-drops" style="z-index: 1; position: absolute; inset: 0;">
-        <div class="snow-particle p1"></div>
-        <div class="snow-particle p2"></div>
-        <div class="snow-particle p3"></div>
-      </div>
-    </div>`;
-  const animThundery =
-    '<div class="icon-thundery"><div class="thunder-cloud cloud-shape"></div><div class="thunder-drops"></div></div>';
-
-  let isWindy = windSpeed > 20;
-
-  if (weatherCode === 0) {
-    weatherCard.classList.add(isDay ? "weather-sunny" : "weather-rainy");
-    modalWeatherIcon.innerHTML = animSunny;
-    modalWeatherDesc.textContent = isDay ? "Clear & Sunny" : "Clear Night";
-  } else if (weatherCode > 0 && weatherCode < 3) {
-    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
-    modalWeatherIcon.innerHTML = animPartlyCloudy;
-    modalWeatherDesc.textContent = isDay
-      ? "Partly Cloudy"
-      : "Partly Cloudy Night";
-  } else if (weatherCode === 3) {
-    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
-    modalWeatherIcon.innerHTML = animCloudy;
-    modalWeatherDesc.textContent = "Overcast";
-  } else if (
-    (weatherCode >= 51 && weatherCode <= 67) ||
-    (weatherCode >= 80 && weatherCode <= 82)
-  ) {
-    weatherCard.classList.add("weather-rainy");
-    modalWeatherIcon.innerHTML = animRainy;
-    modalWeatherDesc.textContent = "Raining";
-  } else if (weatherCode >= 71 && weatherCode <= 77) {
-    weatherCard.classList.add("weather-snowy");
-    modalWeatherIcon.innerHTML = animSnowy;
-    modalWeatherDesc.textContent = "Snowing";
-  } else if (weatherCode >= 95) {
-    weatherCard.classList.add("weather-rainy");
-    modalWeatherIcon.innerHTML = animThundery;
-    modalWeatherDesc.textContent = "Thunderstorm";
-  } else {
-    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
-    modalWeatherIcon.innerHTML = animCloudy;
-    modalWeatherDesc.textContent = "Unknown";
-  }
-
-  if (isWindy) {
-    modalWeatherDesc.textContent += " & Windy";
-  }
-}
+let filterHoverTimeout;
 
 async function fetchCountries() {
   try {
@@ -190,19 +53,6 @@ async function fetchCountries() {
       '<p class="text-red-500 col-span-full text-center py-4 font-semibold">Failed to load country data.</p>';
   } finally {
     loadingIndicator.classList.add("hidden");
-  }
-}
-
-function toggleSaveCountry(code) {
-  if (savedCountries.includes(code)) {
-    savedCountries = savedCountries.filter((c) => c !== code);
-  } else {
-    savedCountries.push(code);
-  }
-  localStorage.setItem("savedCountries", JSON.stringify(savedCountries));
-
-  if (showSavedOnly) {
-    applyFilters();
   }
 }
 
@@ -280,7 +130,7 @@ function renderCountries(countriesToRender) {
 
     const article = document.createElement("div");
     article.className =
-      "card-border-anim card-3d-wobble glass dark:shadow-none rounded-2xl shadow-sm hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-cyan-500/20 transition-shadow duration-300 flex flex-col cursor-pointer relative border border-transparent";
+      "card-border-anim card-3d-wobble bg-white/95 dark:bg-slate-800/85 backdrop-blur-[10px] border border-white/20 dark:border-white/10 rounded-2xl shadow-sm hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-cyan-500/20 transition-shadow duration-300 flex flex-col cursor-pointer relative";
 
     article.innerHTML = `
       <div class="card-border-wrapper rounded-2xl"></div>
@@ -332,6 +182,19 @@ function renderCountries(countriesToRender) {
     article.addEventListener("click", () => openModal(country));
     countriesGrid.appendChild(article);
   });
+}
+
+function toggleSaveCountry(code) {
+  if (savedCountries.includes(code)) {
+    savedCountries = savedCountries.filter((c) => c !== code);
+  } else {
+    savedCountries.push(code);
+  }
+  localStorage.setItem("savedCountries", JSON.stringify(savedCountries));
+
+  if (showSavedOnly) {
+    applyFilters();
+  }
 }
 
 async function openModal(country) {
@@ -458,9 +321,96 @@ async function openModal(country) {
   }
 }
 
-searchInput.addEventListener("input", applyFilters);
+function applyWeatherEffects(weatherCode, windSpeed, isDay) {
+  weatherCard.className =
+    "weather-card p-6 md:p-8 rounded-[23px] shadow-lg text-white mb-8";
 
-let filterHoverTimeout;
+  const sunRaysHTML = `
+    <div class="sun-core"></div>
+    <div class="rays-container">
+      ${Array.from({ length: 8 }, (_, i) => `<div class="ray" style="--i:${i + 1}"></div>`).join("")}
+    </div>
+  `;
+
+  const simpleSunHTML = `<div class="sun-core-simple"></div>`;
+
+  const bigMoonHTML = `
+    <div style="position: absolute; height: 44%; width: 44%; top: 28%; left: 28%; border-radius: 50%; box-shadow: inset -12px -4px 0 0 #e2e8f0; filter: drop-shadow(0 0 15px rgba(255,255,255,0.3)); z-index: 2;"></div>
+  `;
+
+  const smallMoonHTML = `
+    <div style="position: absolute; height: 50%; width: 50%; top: 15%; left: 15%; border-radius: 50%; box-shadow: inset -8px -3px 0 0 #e2e8f0; filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); z-index: 1;"></div>
+  `;
+
+  const animSunny = isDay
+    ? `<div class="icon-sunny">${sunRaysHTML}</div>`
+    : `<div style="width: 100%; height: 100%; position: relative;">${bigMoonHTML}</div>`;
+
+  const animPartlyCloudy = `
+    <div class="icon-partly-cloudy">
+      <div class="pc-sun">${isDay ? simpleSunHTML : smallMoonHTML}</div>
+      <div class="pc-cloud cloud-shape"></div>
+    </div>`;
+
+  const animCloudy = `
+    <div class="icon-cloudy-container">
+      <div class="icon-cloudy cloud-shape"></div>
+    </div>`;
+  const animRainy =
+    '<div class="icon-rainy"><div class="rain-cloud cloud-shape"></div><div class="rain-drops"></div></div>';
+  const animSnowy = `
+    <div class="icon-snowy" style="position: relative; height: 100%; width: 100%;">
+      <div class="snow-cloud cloud-shape" style="z-index: 2; position: relative;"></div>
+      <div class="snow-drops" style="z-index: 1; position: absolute; inset: 0;">
+        <div class="snow-particle p1"></div>
+        <div class="snow-particle p2"></div>
+        <div class="snow-particle p3"></div>
+      </div>
+    </div>`;
+  const animThundery =
+    '<div class="icon-thundery"><div class="thunder-cloud cloud-shape"></div><div class="thunder-drops"></div></div>';
+
+  let isWindy = windSpeed > 20;
+
+  if (weatherCode === 0) {
+    weatherCard.classList.add(isDay ? "weather-sunny" : "weather-rainy");
+    modalWeatherIcon.innerHTML = animSunny;
+    modalWeatherDesc.textContent = isDay ? "Clear & Sunny" : "Clear Night";
+  } else if (weatherCode > 0 && weatherCode < 3) {
+    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
+    modalWeatherIcon.innerHTML = animPartlyCloudy;
+    modalWeatherDesc.textContent = isDay
+      ? "Partly Cloudy"
+      : "Partly Cloudy Night";
+  } else if (weatherCode === 3) {
+    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
+    modalWeatherIcon.innerHTML = animCloudy;
+    modalWeatherDesc.textContent = "Overcast";
+  } else if (
+    (weatherCode >= 51 && weatherCode <= 67) ||
+    (weatherCode >= 80 && weatherCode <= 82)
+  ) {
+    weatherCard.classList.add("weather-rainy");
+    modalWeatherIcon.innerHTML = animRainy;
+    modalWeatherDesc.textContent = "Raining";
+  } else if (weatherCode >= 71 && weatherCode <= 77) {
+    weatherCard.classList.add("weather-snowy");
+    modalWeatherIcon.innerHTML = animSnowy;
+    modalWeatherDesc.textContent = "Snowing";
+  } else if (weatherCode >= 95) {
+    weatherCard.classList.add("weather-rainy");
+    modalWeatherIcon.innerHTML = animThundery;
+    modalWeatherDesc.textContent = "Thunderstorm";
+  } else {
+    weatherCard.classList.add(isDay ? "weather-cloudy" : "weather-rainy");
+    modalWeatherIcon.innerHTML = animCloudy;
+    modalWeatherDesc.textContent = "Unknown";
+  }
+
+  if (isWindy) {
+    modalWeatherDesc.textContent += " & Windy";
+  }
+}
 
 const showFilterDropdown = () => {
   clearTimeout(filterHoverTimeout);
@@ -474,6 +424,52 @@ const hideFilterDropdown = () => {
     searchWrapper.classList.remove("rounded-b-none", "!border-b-transparent");
   }, 150);
 };
+
+if (
+  localStorage.getItem("theme") === "dark" ||
+  (!("theme" in localStorage) &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches)
+) {
+  document.documentElement.classList.add("dark");
+} else {
+  document.documentElement.classList.remove("dark");
+}
+
+themeToggleBtn.addEventListener("click", () => {
+  document.documentElement.classList.toggle("dark");
+  if (document.documentElement.classList.contains("dark")) {
+    localStorage.setItem("theme", "dark");
+  } else {
+    localStorage.setItem("theme", "light");
+  }
+});
+
+customOptions.forEach((option) => {
+  option.addEventListener("click", (e) => {
+    const filterType = e.target.getAttribute("data-filter");
+    const value = e.target.getAttribute("data-value");
+    const text = e.target.innerText;
+
+    if (filterType === "region") {
+      selectedRegion = value;
+      document.getElementById("region-display").innerText = text;
+    } else if (filterType === "climate") {
+      selectedClimate = value;
+      document.getElementById("climate-display").innerText = text;
+    } else if (filterType === "sort") {
+      selectedSort = value;
+      document.getElementById("sort-display").innerText = text;
+    }
+    applyFilters();
+    const parentUl = e.target.closest("ul");
+    parentUl.style.display = "none";
+    setTimeout(() => {
+      parentUl.style.display = "";
+    }, 150);
+  });
+});
+
+searchInput.addEventListener("input", applyFilters);
 
 filterBtn.addEventListener("mouseenter", showFilterDropdown);
 filterDropdown.addEventListener("mouseenter", showFilterDropdown);
@@ -523,7 +519,6 @@ closeModalBtn.addEventListener("click", () => modal.classList.add("hidden"));
 modal.addEventListener("click", (e) => {
   if (e.target === modal) modal.classList.add("hidden");
 });
-const clearFiltersBtn = document.getElementById("clear-filters-btn");
 
 clearFiltersBtn.addEventListener("click", () => {
   selectedRegion = "all";
@@ -537,4 +532,5 @@ clearFiltersBtn.addEventListener("click", () => {
 
   applyFilters();
 });
+
 fetchCountries();
