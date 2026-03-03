@@ -473,6 +473,8 @@ searchInput.addEventListener("input", applyFilters);
 
 filterBtn.addEventListener("mouseenter", showFilterDropdown);
 filterDropdown.addEventListener("mouseenter", showFilterDropdown);
+filterBtn.addEventListener("mouseleave", hideFilterDropdown);
+filterDropdown.addEventListener("mouseleave", hideFilterDropdown);
 
 savedToggleBtn.addEventListener("click", () => {
   savedIcon.classList.add("heart-pop");
